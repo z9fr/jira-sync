@@ -1,9 +1,15 @@
-mod issues;
+use std::fs::File;
 
 use anyhow::Result;
 use reqwest::{header, Client};
 
-use crate::issues::IssueResponse;
+use csv::Writer;
+
+pub mod clockify;
+mod issues;
+mod jira_issues_result;
+
+use crate::{issues::TransformedIssue, jira_issues_result::IssueResponse};
 
 pub struct Jira {
     pub host: String,
@@ -39,8 +45,25 @@ impl Jira {
         }
     }
 
+    pub async fn tasks_to_csv(self, timespent_is_empty: bool) -> Result<()> {
+        let result = self.assigned_tasks().await?;
+
+        let file = File::create("transformed_issues.csv")?;
+        let mut writer = Writer::from_writer(file);
+
+        let _: Result<()> = result.issues.iter().try_for_each(|issue| {
+            let transformed_issue = TransformedIssue::from(issue.clone());
+            writer.serialize(transformed_issue)?;
+            Ok(())
+        });
+
+        writer.flush()?;
+        println!("CSV file created successfully.");
+        Ok(())
+    }
+
     pub async fn assigned_tasks(self) -> Result<IssueResponse> {
-        let jql = "project = \"SLCFD\" AND assignee IN (currentUser()) AND statusCategory in (Done) AND timespent is not empty ORDER BY created DESC";
+        let jql = "project = \"SLCFD\" AND assignee IN (currentUser()) AND statusCategory in (Done) AND timespent is empty ORDER BY created DESC";
 
         let params = [("jql", jql), ("maxResults", "50")];
         let url = reqwest::Url::parse_with_params(&format!("{}/search", self.base_url), &params)?;
