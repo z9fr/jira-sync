@@ -55,29 +55,38 @@ impl Clockify {
     }
 
     pub async fn new_time_entry(&self, created: String, seconds: i64) -> Result<()> {
+        let working_hours = TimeDelta::try_hours(8).unwrap();
         let create_time = match DateTime::parse_from_str(&created, "%Y-%m-%dT%H:%M:%S%.3f%z") {
             Ok(time) => time,
             Err(err) => return Err(anyhow!("Failed to parse creation time: {}", err)),
         };
-        let duration = TimeDelta::try_seconds(seconds).unwrap();
-        let start_time = create_time.checked_sub_signed(duration).unwrap();
-        let working_hours = TimeDelta::try_hours(8).unwrap();
 
-        let working_ranges: Vec<_> = (0..)
-            .map(|i| {
-                let start = start_time + working_hours * i;
-                let end = start + working_hours;
-                (start, end.min(create_time))
-            })
-            .take_while(|(start, _)| *start < create_time)
-            .collect();
+        let duration_to_complete = TimeDelta::try_seconds(seconds).unwrap();
+        let complete_time_for_task = duration_to_complete / (8 * 3600);
+
+        let start_time = create_time
+            .checked_sub_signed(complete_time_for_task)
+            .unwrap();
+        let mut working_ranges = Vec::new();
+
+        let mut current_time = start_time;
+
+        while current_time < create_time {
+            let end_time = (current_time + working_hours).min(create_time);
+            working_ranges.push((current_time, end_time));
+            current_time = end_time;
+        }
+
+        println!("{:?}", working_ranges);
+
+        /*
 
         for (start, end) in working_ranges {
             let start_time_str = start.format("%Y-%m-%dT%H:%M:%SZ").to_string();
             let create_time_str = end.format("%Y-%m-%dT%H:%M:%SZ").to_string();
 
             self.api_entry(start_time_str, create_time_str).await?;
-        }
+        }*/
 
         Ok(())
     }
