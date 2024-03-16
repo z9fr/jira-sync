@@ -19,7 +19,7 @@ async fn main() -> Result<()> {
         None,
     );
     clockify
-        .new_time_entry(String::from("2024-03-13T16:31:37.379+0530"), 259200)
+        .new_time_entry(String::from("2024-03-13T16:31:37.379+0530"), 259200, true)
         .await?;
 
     Ok(())
