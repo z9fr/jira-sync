@@ -521,29 +521,18 @@ pub struct Description {
     #[serde(rename = "type")]
     pub type_field: String,
     pub version: i64,
-    pub content: Vec<Content>,
+    pub content: Option<Vec<Content>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Content {
     #[serde(rename = "type")]
-    pub type_field: String,
-    pub content: Vec<Content2>,
+    pub type_field: Option<String>,
+    pub content: Option<Vec<Content>>,
     pub attrs: Option<Attrs7>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Content2 {
-    #[serde(rename = "type")]
-    pub type_field: String,
     pub text: Option<String>,
-    #[serde(default)]
-    pub marks: Vec<Mark>,
-    #[serde(default)]
-    pub content: Vec<Content3>,
-    pub attrs: Option<Attrs6>,
+    pub marks: Option<Vec<Mark>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -557,48 +546,7 @@ pub struct Mark {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Attrs {
-    pub href: String,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Content3 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub content: Vec<Content4>,
-    pub attrs: Option<Attrs5>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Content4 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub text: Option<String>,
-    #[serde(default)]
-    pub content: Vec<Content5>,
-    #[serde(default)]
-    pub marks: Vec<Mark3>,
-    pub attrs: Option<Attrs4>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Content5 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    #[serde(default)]
-    pub content: Vec<Content6>,
-    pub text: Option<String>,
-    pub marks: Option<Vec<Mark2>>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Content6 {
-    #[serde(rename = "type")]
-    pub type_field: String,
-    pub text: String,
+    pub href: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

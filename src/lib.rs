@@ -1,9 +1,7 @@
-use std::fs::File;
-
 use anyhow::Result;
-use reqwest::{header, Client};
-
 use csv::Writer;
+use reqwest::{header, Client};
+use std::fs::File;
 
 pub mod clockify;
 mod issues;
@@ -15,10 +13,11 @@ pub struct Jira {
     pub host: String,
     client: Client,
     base_url: String,
+    debug: bool,
 }
 
 impl Jira {
-    pub fn new(host: &str, api_key: &str, version: Option<&str>) -> Self {
+    pub fn new(host: &str, api_key: &str, version: Option<&str>, debug: bool) -> Self {
         let v = version.unwrap_or("3");
         let client = Client::builder()
             .default_headers({
@@ -42,13 +41,22 @@ impl Jira {
             host: host.to_string(),
             client,
             base_url: format!("https://{}/rest/api/{}", host, v),
+            debug,
         }
     }
 
-    pub async fn tasks_to_csv(self, timespent_is_empty: bool) -> Result<()> {
-        let result = self.assigned_tasks().await?;
+    pub async fn tasks_to_csv(
+        self,
+        file_name: &str,
+        limit: i64,
+        project_name: &str,
+        timespent_is_empty: bool,
+    ) -> Result<()> {
+        let result = self
+            .assigned_tasks(project_name, timespent_is_empty, limit)
+            .await?;
 
-        let file = File::create("transformed_issues.csv")?;
+        let file = File::create(file_name)?;
         let mut writer = Writer::from_writer(file);
 
         let _: Result<()> = result.issues.iter().try_for_each(|issue| {
@@ -62,10 +70,26 @@ impl Jira {
         Ok(())
     }
 
-    pub async fn assigned_tasks(self) -> Result<IssueResponse> {
-        let jql = "project = \"SLCFD\" AND assignee IN (currentUser()) AND statusCategory in (Done) AND timespent is empty ORDER BY created DESC";
+    pub async fn assigned_tasks(
+        self,
+        project_name: &str,
+        timespent_is_empty: bool,
+        limit: i64,
+    ) -> Result<IssueResponse> {
+        println!("{}", timespent_is_empty);
 
-        let params = [("jql", jql), ("maxResults", "50")];
+        let timespend_query = match timespent_is_empty {
+            true => "timespent is empty",
+            false => "timespent is not empty",
+        };
+
+        let jql = format!("project = \"{}\" AND assignee IN (currentUser()) AND statusCategory in (Done) AND {} ORDER BY created DESC", project_name, timespend_query);
+
+        if self.debug {
+            println!("generated jql {}", jql);
+        }
+
+        let params = [("jql", jql), ("maxResults", limit.to_string())];
         let url = reqwest::Url::parse_with_params(&format!("{}/search", self.base_url), &params)?;
 
         let request = self
