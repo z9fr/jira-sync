@@ -58,8 +58,6 @@ impl Jira {
             let record: TransformedIssue = result?;
             let slots = TimeBreakdown::slots(record.created, record.timespent, true).unwrap();
 
-            println!("{:#?}", slots);
-
             for i in &slots {
                 clockify
                     .new_time_entries(i.0.clone(), i.1.clone(), &record.summary, &record.key)
@@ -68,6 +66,8 @@ impl Jira {
                     .await?;
             }
         }
+
+        println!("data sync complete.");
 
         Ok(())
     }
