@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::jira_issues_result::{Issue, IssueResponse};
 
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TransformedIssue {
     #[serde(rename = "ID")]
@@ -29,6 +29,57 @@ pub struct TransformedIssue {
     pub statuscategorychangedate: String,
     #[serde(rename = "Self")]
     pub self_field: String,
+}
+
+impl<'de> Deserialize<'de> for TransformedIssue {
+    fn deserialize<D>(deserializer: D) -> Result<TransformedIssue, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize, Clone)]
+        #[serde(rename_all = "camelCase")]
+        struct Intermediate {
+            #[serde(rename = "ID")]
+            pub id: String,
+            #[serde(rename = "Key")]
+            pub key: String,
+            #[serde(rename = "Time Estimate")]
+            pub timeestimate_value: String,
+            #[serde(rename = "Time Spent")]
+            pub timespend_value: String,
+            #[serde(rename = "Resolution Date")]
+            pub resolutiondate: Option<String>,
+            #[serde(rename = "Updated")]
+            pub updated: String,
+            #[serde(rename = "Created")]
+            pub created: String,
+            #[serde(rename = "Summary")]
+            pub summary: String,
+            #[serde(rename = "Status Category Change Date")]
+            pub statuscategorychangedate: String,
+            #[serde(rename = "Self")]
+            pub self_field: String,
+        }
+
+        let intermediate = Intermediate::deserialize(deserializer)?;
+        let timeestimate = TransformedIssue::parse_timespent(&intermediate.timeestimate_value);
+        let timespent = TransformedIssue::parse_timespent(&intermediate.timespend_value);
+
+        Ok(TransformedIssue {
+            id: intermediate.id,
+            key: intermediate.key,
+            timeestimate_value: intermediate.timeestimate_value,
+            timespend_value: intermediate.timespend_value,
+            resolutiondate: intermediate.resolutiondate,
+            updated: intermediate.updated,
+            created: intermediate.created,
+            summary: intermediate.summary,
+            statuscategorychangedate: intermediate.statuscategorychangedate,
+            self_field: intermediate.self_field,
+            timeestimate,
+            timespent,
+        })
+    }
 }
 
 impl From<Issue> for TransformedIssue {
@@ -70,7 +121,7 @@ impl TransformedIssue {
         }
     }
 
-    pub fn parse_timespent(self, time_str: &str) -> i64 {
+    pub fn parse_timespent(time_str: &str) -> i64 {
         let mut parts = time_str.chars().peekable();
         let mut total_seconds = 0;
         let mut current_value = String::new();

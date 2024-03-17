@@ -5,6 +5,7 @@ use jira_sync::Jira;
 use lazy_static::lazy_static;
 use serde::Deserialize;
 use serde::Serialize;
+use std::fs;
 use std::process::exit;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -55,10 +56,14 @@ enum Commands {
         limit: i64,
         #[arg(
             value_name = "TIME_SPEND",
-            default_value_t = ShowTimeSpendIssuesOptions::Disable,
+            default_value_t = ShowTimeSpendIssuesOptions::Enable,
             help = "timespend is avaible results or not"
         )]
         time_spend_empty: ShowTimeSpendIssuesOptions,
+    },
+    Sync {
+        #[arg(value_name = "PATH", help = "Updated CSV path to sync data")]
+        path: String,
     },
 }
 
@@ -113,6 +118,23 @@ async fn main() -> Result<()> {
     let mut config: AppConfig = confy::load(&APP_NAME, None)?;
 
     match args.command {
+        Commands::Sync { path } => {
+            if fs::metadata(&path).is_err() {
+                eprintln!("failed to open {}. make sure the file exist", path);
+                exit(1);
+            }
+
+            let jira_key = match config.jira_api_key {
+                Some(key) => key,
+                None => {
+                    eprintln!("Jira API key not found. Please configure it in the configuration.");
+                    exit(1)
+                }
+            };
+
+            let jira = Jira::new(&config.jira_host, &jira_key, None, config.debug);
+            jira.csv_to_tasks(&path).await?;
+        }
         Commands::Download {
             path,
             limit,

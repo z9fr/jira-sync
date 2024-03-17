@@ -1,7 +1,7 @@
 use anyhow::Result;
 use csv::Writer;
 use reqwest::{header, Client};
-use std::fs::File;
+use std::fs::{self, File};
 
 pub mod clockify;
 mod issues;
@@ -43,6 +43,19 @@ impl Jira {
             base_url: format!("https://{}/rest/api/{}", host, v),
             debug,
         }
+    }
+
+    pub async fn csv_to_tasks(self, path: &str) -> Result<()> {
+        let file_content = fs::read_to_string(path).expect("Failed to read the file");
+        let mut rdr = csv::Reader::from_reader(file_content.as_bytes());
+
+        for result in rdr.deserialize() {
+            let record: TransformedIssue = result?;
+
+            println!("{:#?}", record);
+        }
+
+        Ok(())
     }
 
     pub async fn tasks_to_csv(
