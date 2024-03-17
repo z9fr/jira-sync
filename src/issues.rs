@@ -10,11 +10,11 @@ pub struct TransformedIssue {
     #[serde(rename = "Key")]
     pub key: String,
     #[serde(skip_serializing)]
-    timeestimate: i64,
+    pub timeestimate: i64,
     #[serde(rename = "Time Estimate")]
     pub timeestimate_value: String,
     #[serde(skip_serializing)]
-    timespent: i64,
+    pub timespent: i64,
     #[serde(rename = "Time Spent")]
     pub timespend_value: String,
     #[serde(rename = "Resolution Date")]

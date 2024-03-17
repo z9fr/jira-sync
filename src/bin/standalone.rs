@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use inquire::{min_length, Password, Text};
+use jira_sync::clockify::Clockify;
 use jira_sync::Jira;
 use lazy_static::lazy_static;
 use serde::Deserialize;
@@ -132,8 +133,41 @@ async fn main() -> Result<()> {
                 }
             };
 
+            let clockify_key = match config.clockify_api_key {
+                Some(key) => key,
+                None => {
+                    eprintln!(
+                        "Clockify API key not found. Please configure it in the configuration."
+                    );
+                    exit(1)
+                }
+            };
+            let clockify_project_id = match config.clockify_project_name {
+                Some(key) => key,
+                None => {
+                    eprintln!(
+                        "Clockify Project not found. Please configure it in the configuration."
+                    );
+                    exit(1)
+                }
+            };
+            let clockify_workspace_id = match config.clockify_workspace {
+                Some(key) => key,
+                None => {
+                    eprintln!(
+                        "Clockify workspace not found. Please configure it in the configuration."
+                    );
+                    exit(1)
+                }
+            };
             let jira = Jira::new(&config.jira_host, &jira_key, None, config.debug);
-            jira.csv_to_tasks(&path).await?;
+            let clockify = Clockify::new(
+                &clockify_key,
+                &clockify_project_id,
+                &clockify_workspace_id,
+                None,
+            );
+            jira.csv_to_tasks(&path, &clockify).await?;
         }
         Commands::Download {
             path,

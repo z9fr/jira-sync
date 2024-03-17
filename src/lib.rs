@@ -1,13 +1,18 @@
 use anyhow::Result;
+use clockify::Clockify;
 use csv::Writer;
 use reqwest::{header, Client};
+use serde_json::json;
 use std::fs::{self, File};
 
 pub mod clockify;
 mod issues;
 mod jira_issues_result;
+mod time_breakdown;
 
-use crate::{issues::TransformedIssue, jira_issues_result::IssueResponse};
+use crate::{
+    issues::TransformedIssue, jira_issues_result::IssueResponse, time_breakdown::TimeBreakdown,
+};
 
 pub struct Jira {
     pub host: String,
@@ -45,14 +50,52 @@ impl Jira {
         }
     }
 
-    pub async fn csv_to_tasks(self, path: &str) -> Result<()> {
+    pub async fn csv_to_tasks(self, path: &str, clockify: &Clockify) -> Result<()> {
         let file_content = fs::read_to_string(path).expect("Failed to read the file");
         let mut rdr = csv::Reader::from_reader(file_content.as_bytes());
 
         for result in rdr.deserialize() {
             let record: TransformedIssue = result?;
+            let slots = TimeBreakdown::slots(record.created, record.timespent, true).unwrap();
 
-            println!("{:#?}", record);
+            println!("{:#?}", slots);
+
+            for i in &slots {
+                clockify
+                    .new_time_entries(i.0.clone(), i.1.clone(), &record.summary, &record.key)
+                    .await?;
+                self.add_to_worklog(&record.key, record.timespent, &i.2)
+                    .await?;
+            }
+        }
+
+        Ok(())
+    }
+
+    pub async fn add_to_worklog(
+        &self,
+        task_id: &str,
+        time_spend: i64,
+        started_at: &str,
+    ) -> Result<()> {
+        let url = format!("{}/issue/{}/worklog", self.base_url, task_id);
+        let json = json!({
+            "timeSpentSeconds": time_spend,
+            "started": started_at,
+        });
+
+        let request = self
+            .client
+            .request(reqwest::Method::POST, url)
+            .json(&json)
+            .send()
+            .await?;
+
+        let status = request.status();
+
+        if !status.is_success() {
+            let response = request.text().await?;
+            println!("{:#?}", response);
         }
 
         Ok(())
