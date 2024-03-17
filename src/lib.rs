@@ -5,6 +5,7 @@ use reqwest::{header, Client};
 use serde_json::json;
 use std::fs::{self, File};
 
+pub mod cli;
 pub mod clockify;
 mod issues;
 mod jira_issues_result;

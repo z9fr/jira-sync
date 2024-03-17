@@ -1,0 +1,36 @@
+.ie \n(.g .ds Aq \(aq
+.el .ds Aq '
+.TH jira-sync 1  "jira-sync 1.0" 
+.SH NAME
+jira\-sync \- The "Jira\-Clockify Sync" CLI utility is a powerful tool crafted to streamline the process of updating Jira 
+    task details and seamlessly synchronizing them with Clockify, simplifying time management and enhancing productivity in project workflows.
+.SH SYNOPSIS
+\fBjira\-sync\fR [\fB\-h\fR|\fB\-\-help\fR] [\fB\-V\fR|\fB\-\-version\fR] <\fIsubcommands\fR>
+.SH DESCRIPTION
+The "Jira\-Clockify Sync" utility is a straightforward tool designed to streamline the process of updating time spent on 
+    Jira tasks and automatically synchronizing it with Clockify. This utility simplifies the task of managing and tracking time across both platforms, 
+    enhancing productivity and accuracy in project management workflows.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+Print help (see a summary with \*(Aq\-h\*(Aq)
+.TP
+\fB\-V\fR, \fB\-\-version\fR
+Print version
+.SH SUBCOMMANDS
+.TP
+jira\-sync\-configure(1)
+configure jira and clockify properties
+.TP
+jira\-sync\-download(1)
+exports jira tasks as a csv to be able to update the timelogs in one place
+.TP
+jira\-sync\-sync(1)
+takes a csv file with updated timelogs and sync the tickets with clockify while updating the timelogs in jira
+.TP
+jira\-sync\-help(1)
+Print this message or the help of the given subcommand(s)
+.SH VERSION
+v1.0
+.SH AUTHORS
+z9fr <z9fr@protonmail.com>

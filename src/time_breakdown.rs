@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Datelike, FixedOffset, TimeDelta, Timelike, Weekday};
 

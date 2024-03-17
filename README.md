@@ -18,3 +18,4 @@ The idea is to implement a way to sync my jira task time log to clockify. should
 
 > Note: the api's im using are not bulk endpoints since the current operations im using does not support bulk op. 
 so this can rate limit you if you try to update a big number at once. 
+

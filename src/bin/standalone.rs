@@ -1,6 +1,11 @@
 use anyhow::Result;
-use clap::{Args, Parser, Subcommand, ValueEnum};
+use clap::Parser;
 use inquire::{min_length, Password, Text};
+use jira_sync::cli;
+use jira_sync::cli::Cli;
+use jira_sync::cli::Commands;
+use jira_sync::cli::ConfigureCommands;
+use jira_sync::cli::ShowTimeSpendIssuesOptions;
 use jira_sync::clockify::Clockify;
 use jira_sync::Jira;
 use lazy_static::lazy_static;
@@ -8,6 +13,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::fs;
 use std::process::exit;
+
+use crate::cli::SetDebug;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct AppConfig {
@@ -31,81 +38,6 @@ impl Default for AppConfig {
             clockify_project_name: None,
             debug: false,
         }
-    }
-}
-
-#[derive(Debug, Parser)]
-#[command(name = "jira-sync")]
-#[command(about = "A cli to update jira tasks and sync clockify", long_about = Some("A simple utility to update Jira task timespend and automatically sync it with Clockify"))]
-struct Cli {
-    #[command(subcommand)]
-    command: Commands,
-}
-
-#[derive(Debug, Subcommand)]
-enum Commands {
-    #[command(arg_required_else_help = true)]
-    Configure(ConfigureArgs),
-    Download {
-        #[arg(value_name = "PATH", help = "CSV download path")]
-        path: String,
-        #[arg(
-            value_name = "LIMIT",
-            default_value_t = 50,
-            help = "total result limit for the csv"
-        )]
-        limit: i64,
-        #[arg(
-            value_name = "TIME_SPEND",
-            default_value_t = ShowTimeSpendIssuesOptions::Enable,
-            help = "timespend is avaible results or not"
-        )]
-        time_spend_empty: ShowTimeSpendIssuesOptions,
-    },
-    Sync {
-        #[arg(value_name = "PATH", help = "Updated CSV path to sync data")]
-        path: String,
-    },
-}
-
-#[derive(Debug, Args)]
-#[command(args_conflicts_with_subcommands = true)]
-#[command(flatten_help = true)]
-struct ConfigureArgs {
-    #[command(subcommand)]
-    command: Option<ConfigureCommands>,
-}
-
-#[derive(Debug, Subcommand)]
-enum ConfigureCommands {
-    Init {},
-    Config {},
-    JiraApi { key: Option<String> },
-    JiraProject { key: String },
-    ClockifyApi { key: Option<String> },
-    ClockifyWorkspace { key: String },
-    ClockifyProject { key: String },
-    SetDebug { key: SetDebug },
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
-enum SetDebug {
-    Enable,
-    Disable,
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
-enum ShowTimeSpendIssuesOptions {
-    Enable,
-    Disable,
-}
-
-impl std::fmt::Display for ShowTimeSpendIssuesOptions {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.to_possible_value()
-            .expect("no values are skipped")
-            .get_name()
-            .fmt(f)
     }
 }
 
