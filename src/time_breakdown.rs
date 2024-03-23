@@ -8,7 +8,7 @@ impl TimeBreakdown {
         created: String,
         time_for_complete: i64,
         ignore_weekends: bool,
-    ) -> Result<Vec<(String, String, String)>> {
+    ) -> Result<Vec<(String, String, String, i64)>> {
         let completed_task_time =
             match DateTime::parse_from_str(&created, "%Y-%m-%dT%H:%M:%S%.3f%z") {
                 Ok(time) => time,
@@ -85,7 +85,15 @@ impl TimeBreakdown {
                 .format("%Y-%m-%dT%H:%M:%S%.3f%z")
                 .to_string();
 
-            slots.push((start_time_str, end_time_str, start_time_jira))
+            let duration = slot_end_time.signed_duration_since(slot_start_time);
+            let mins_difference = duration.num_seconds();
+
+            slots.push((
+                start_time_str,
+                end_time_str,
+                start_time_jira,
+                mins_difference,
+            ))
         }
 
         Ok(slots)

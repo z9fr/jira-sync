@@ -41,7 +41,7 @@ pub enum Commands {
         #[arg(
             value_name = "TIME_SPEND",
             default_value_t = ShowTimeSpendIssuesOptions::Enable,
-            help = "timespend is avaible results or not"
+            help = "timespend is availible results or not"
         )]
         time_spend_empty: ShowTimeSpendIssuesOptions,
     },

@@ -63,8 +63,8 @@ impl Jira {
                 clockify
                     .new_time_entries(i.0.clone(), i.1.clone(), &record.summary, &record.key)
                     .await?;
-                self.add_to_worklog(&record.key, record.timespent, &i.2)
-                    .await?;
+
+                self.add_to_worklog(&record.key, i.3, &i.2).await?;
             }
         }
 
